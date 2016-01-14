@@ -1,3 +1,4 @@
 .tags*
 *.cproject
 *.project
+/.pydevproject
