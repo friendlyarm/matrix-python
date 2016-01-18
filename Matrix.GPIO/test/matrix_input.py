@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 
+import sys
 import time
 import Matrix.GPIO as GPIO
 
 def main():
+    argc = len(sys.argv)
+    if argc != 2:
+        print "usage:%s pin" % sys.argv[0]
+        return
+    pin = int(sys.argv[1])
     try:
-        led = 7
         GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(led, GPIO.OUT)
-        print "Light on"
-        GPIO.output(led, GPIO.HIGH)
-        time.sleep(1)
-        print "Light off"
-        GPIO.output(led, GPIO.LOW)
+        GPIO.setup(pin, GPIO.IN)
+        print "Get pin%d value %d" % (pin, GPIO.input(pin))
     except Exception, e:
         print e
     finally:

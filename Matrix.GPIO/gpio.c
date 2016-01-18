@@ -22,16 +22,14 @@ static int chantoGPIO(int channel)
         gpio = pinGPIO[channel];
     } else if (gpio_mode == KERNEL) {
         gpio = channel;
+        for (i=GPIO_MIN_NUM; i<=GPIO_MAX_NUM; i++) {
+            if (gpio == pinGPIO[i])
+                break;
+        }
+        if (i > GPIO_MAX_NUM || gpio == -1) {
+            return -1;
+        }
     } else {
-        PyErr_SetString(PyExc_RuntimeError, "Please set pin numbering mode using GPIO.setmode(GPIO.BOARD) or GPIO.setmode(GPIO.KERNEL)");
-        return -1;
-    }
-    for (i=GPIO_MIN_NUM; i<=GPIO_MAX_NUM; i++) {
-        if (gpio == pinGPIO[i])
-            break;
-    }
-    if (i > GPIO_MAX_NUM) {
-        PyErr_SetString(PyExc_ValueError, "Invalid pin, it may be 3.3V、5V、GND or occupied by kernel");
         return -1;
     }
     return gpio;
@@ -139,6 +137,7 @@ static PyObject *py_gpio_setup(PyObject *self, PyObject *args)
         return NULL;
     }
     if ((gpio = chantoGPIO(channel)) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Invalid Pin, it may be 5V 3.3V GND or occupied by kernel");
         return NULL;
     }
     if (exportGPIOPin(gpio) < 0) {
@@ -178,10 +177,13 @@ static PyObject *py_gpio_output(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "ii", &channel, &value))
         return NULL; 
     if ((gpio = chantoGPIO(channel)) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Invalid Pin, it may be 5V 3.3V GND or occupied by kernel");
         return NULL;
     }
-    if (setGPIOValue(gpio, value) < 0)
+    if (setGPIOValue(gpio, value) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Fail to set gpio value");
         return NULL;
+    }
 
     Py_RETURN_NONE; 
 }
@@ -195,6 +197,7 @@ static PyObject *py_gpio_input(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "i", &channel))
         return NULL;
     if ((gpio = chantoGPIO(channel)) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Invalid Pin, it may be 5V 3.3V GND or occupied by kernel");
         return NULL;
     }
     switch (getGPIOValue(gpio)) {
